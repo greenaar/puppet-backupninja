@@ -1,0 +1,57 @@
+#
+# simple sqlite3 backup handler for backupninja
+#
+# REQUIRES: 'sqlite3' installed
+#
+
+# TODO:
+# - allow to backup other db than 'main'
+# - change permissions of dest file
+
+getconf SQLITE3 /usr/bin/sqlite3
+getconf GZIP /bin/gzip
+getconf src_path
+getconf dest_path 
+getconf compress
+
+#
+# check script params
+#
+if [ ! $src_path ]; then
+  fatal "ERROR: src_path to sqlite3 db not defined"
+fi 
+
+if [ ! $dest_path ]; then
+  fatal "ERROR: dest_path to sqlite3 db not defined"
+fi
+
+if [ ! -x $GZIP -o ! -x $SQLITE3 ]; then
+  fatal "ERROR: Either gzip or sqlite3 were not found'
+fi
+
+if [ ! -f $src_path ]; then 
+  fatal "ERROR: $src_path does not exist or is not a file"
+fi
+
+if [ ! -d $dest_path ]; then
+  info "INFO: creating $dest_path"
+  mkdir -p $dest_path
+fi
+
+#
+# backup database
+#
+info "INFO: backup $src_path db to $dest_path"
+
+$SQLITE3 $src_path ".backup $dest_path"
+exit_status=$?
+
+if [ $exit_status == 0 ]; then
+   info "INFO: success..."
+else
+   fatal "ERROR: cannot backup sqlite3 db: $src_path, exit status: [$exit_status]"
+fi
+
+if [ "$compress" == 'true' ]; then
+  $gzip $dest_path
+fi

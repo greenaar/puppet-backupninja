@@ -1,0 +1,29 @@
+# Raw push to s3
+
+# requires s3cmd be installed and configured.
+
+
+getconf src /var/lib/backups/
+getconf bucket
+getconf S3CMD "/usr/bin/s3cmd"
+getconf options "--recursive --rr"
+error=0
+
+if [ ! -d $src ]; then
+  error "Error: $src does not exist, or is not a directory"
+fi
+
+if [ ! -x $S3CMD ]; then
+  error "Error: $S3CMD is not an executable"
+fi
+
+ret=`$S3CMD put $options $src s3://$bucket 2>&1`
+ code=$?
+   if [ "$ret" ]; then
+      debug "$ret"
+   fi
+   if [ $code != 0 ]; then
+      error "command failed $S3CMD put $options $src s3://$bucket"
+   fi
+exit 0
+
